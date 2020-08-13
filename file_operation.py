@@ -54,6 +54,8 @@ def para_data(worksheet,col_position,begin_row):
     # Reading resent parametric
     res_para=worksheet.cell_value(0,col_position)
     logging.info("Loading parametric: %s." %res_para)
+    if(res_para==""):
+        logging.error("Cannot find out this parametric name, please check the source file!")
 
     # Reading resent col values
     workdata=worksheet.col_values(col_position,start_rowx=begin_row,end_rowx=None)
@@ -68,7 +70,7 @@ def value_find_row(worksheet,find_row,begin_col,value_name):
     for i in range(len(find_row)):
         if (find_row[i]==value_name):
             value_row=worksheet.row_values(i,start_colx=begin_col,end_colx=None)
-            logging.info("Found value %s in row %d" %(value_name,i))
+            logging.info("Found value %s in row %d" %(value_name,i+1))
             break
     return i,value_row
 
@@ -78,7 +80,7 @@ def value_find_col(worksheet,find_col,begin_row,value_name):
     for i in range(len(find_col)):
         if(find_col[i]==value_name):
             value_col=worksheet.col_values(i,start_rowx=begin_row,end_rowx=None)
-            logging.info("Found value %s in col %d" %(value_name,i))
+            logging.info("Found value %s in col %d" %(value_name,i+1))
             break
     return i,value_col
 
@@ -91,9 +93,9 @@ def data_range():
     begin_row=int(input())-1
     print('Please input the number beginning of col:')
     begin_col=int(input())-1
-    print("Row begins at %d. Col begins at %d" %(begin_row,begin_col))
+    print("Row begins at %d. Col begins at %d" %(begin_row+1,begin_col+1))
 
     # Record information of data range
-    logging.info("Chosen Range:\nRow begins at %d\nCol begins at %d" %(begin_row,begin_col))
+    logging.info("Chosen Range:\nRow begins at %d\nCol begins at %d" %(begin_row+1,begin_col+1))
 
     return begin_row, begin_col

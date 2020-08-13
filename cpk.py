@@ -1,7 +1,8 @@
 import file_operation
 import math
 import logging
-import xlwt
+from openpyxl import Workbook
+from openpyxl.styles import Font,PatternFill,Border,Side,Alignment
 
 # ----------------------------------------------------------------------------
 # Parameter definition
@@ -17,6 +18,8 @@ logging.basicConfig(level=logging.DEBUG,format='%(asctime)s - %(levelname)s - %(
 # ----------------------------------------------------------------------------
 # This is a function to calculate data average & standard deviaion
 def data_cpk_cal(workdata,upp_limit_row,low_limit_row,limit_col_num,begin_col):
+
+    workdata=cpk_data_check(workdata)
 
     # Calculating max & min of data
     single_max=max(workdata)
@@ -38,13 +41,13 @@ def data_cpk_cal(workdata,upp_limit_row,low_limit_row,limit_col_num,begin_col):
     if(upp_limit=="NA" and low_limit=="NA"):
         logging.info("The limit is [NA,NA]")
     elif(upp_limit=="NA"):
-        logging.info("The limit is [%f,NA]" %low_limit)
+        logging.info("The limit is [%s,NA]" %low_limit)
     elif(low_limit=="NA"):
-        logging.info("The limit is [NA,%f]" %upp_limit)
+        logging.info("The limit is [NA,%s]" %upp_limit)
     else:
         logging.info("The limit is [%s,%s]" %(low_limit,upp_limit))
     if(single_std==0 or (upp_limit=="NA" and low_limit=="NA")):
-    	logging.warning("This parametric std or limit is NA.")
+    	logging.warning("This parametric std is 0 or limit is NA.")
     	single_cpl="NA"
     	single_cpu="NA"
     	single_cpk="NA"
@@ -87,51 +90,64 @@ def check_value(cpk_value):
         logging.info("Parametric CPK is OK.\n=========================")
 
 # ----------------------------------------------------------------------------
+# This is a function to check data, delete blank data
+def cpk_data_check(workdata):
+    check_data=list(workdata)
+    while '' in check_data:
+        check_data.remove('')
+    new_data=tuple(check_data)
+    
+    return new_data
+
+# ----------------------------------------------------------------------------
 # This is a function to output CPK results to excel file
 def output_cpk_result(para,avg,std,pos3_delta,neg3_delta,data_min,data_max,cpl,cpu,cpk,low_limit_row,upp_limit_row):
 
     # Initial file
-    outdata=xlwt.Workbook(encoding='ascii')
-    outsheet=outdata.add_sheet('Result')
-
+    outdata=Workbook()
+    outsheet=outdata.worksheets[0]
+    outsheet.title='CPK_Result'
+    
     # Set style of output data
-    style=xlwt.XFStyle()
-    font=xlwt.Font()
-    font.name='Times New Roman'
-    font.bold=False
-    font.underline=False
-    font.italic=False
-    style.font=font
+    # Font Type: Times New Roman
+    # Size: 12
+    # Border: Thin
+    # Alignment: Center
+    # Pattern Fill: Red background color when CPK<1.33
+    font=Font('Times New Roman',size=12)
+    fill=PatternFill(fill_type='solid',start_color='FF0000')
+    border=Border(left=Side(border_style='thin',color='000000'),right=Side(border_style='thin',color='000000'),top=Side(border_style='thin',color='000000'),bottom=Side(border_style='thin',color='000000'))
+    align=Alignment(horizontal='center',vertical='center')
 
     # Write excel file
-    outsheet.write(0,0,'Parametric',style)
-    outsheet.write(1,0,'Upper Limit',style)
-    outsheet.write(2,0,'Lower Limit',style)
-    outsheet.write(3,0,'AVG',style)
-    outsheet.write(4,0,'STD',style)
-    outsheet.write(5,0,'+3Del',style)
-    outsheet.write(6,0,'-3Del',style)
-    outsheet.write(7,0,'Max',style)
-    outsheet.write(8,0,'Min',style)
-    outsheet.write(9,0,'CPL',style)
-    outsheet.write(10,0,'CPU',style)
-    outsheet.write(11,0,'CPK',style)
+    words=('Parameter','Upper Limit','Lower Limit','AVG','STD','+3Del','-3Del','Max','Min','CPL','CPU','CPK')
     npara=len(avg)
+    nwords=len(words)
+    for i in range(nwords):
+        outsheet.cell(row=i+1,column=1).value=words[i]
     for i in range(npara):
-        outsheet.write(0,i+1,para[i],style)
-        outsheet.write(1,i+1,upp_limit_row[i],style)
-        outsheet.write(2,i+1,low_limit_row[i],style)
-        outsheet.write(3,i+1,avg[i],style)
-        outsheet.write(4,i+1,std[i],style)
-        outsheet.write(5,i+1,pos3_delta[i],style)
-        outsheet.write(6,i+1,neg3_delta[i],style)
-        outsheet.write(7,i+1,data_max[i],style)
-        outsheet.write(8,i+1,data_min[i],style)
-        outsheet.write(9,i+1,cpl[i],style)
-        outsheet.write(10,i+1,cpu[i],style)
-        outsheet.write(11,i+1,cpk[i],style)
+        outsheet.cell(row=1,column=i+2).value=para[i]
+        outsheet.cell(row=2,column=i+2).value=upp_limit_row[i]
+        outsheet.cell(row=3,column=i+2).value=low_limit_row[i]
+        outsheet.cell(row=4,column=i+2).value=avg[i]
+        outsheet.cell(row=5,column=i+2).value=std[i]
+        outsheet.cell(row=6,column=i+2).value=pos3_delta[i]
+        outsheet.cell(row=7,column=i+2).value=neg3_delta[i]
+        outsheet.cell(row=8,column=i+2).value=data_max[i]
+        outsheet.cell(row=9,column=i+2).value=data_min[i]
+        outsheet.cell(row=10,column=i+2).value=cpl[i]
+        outsheet.cell(row=11,column=i+2).value=cpu[i]
+        outsheet.cell(row=12,column=i+2).value=cpk[i]
+        if(cpk[i]!="NA" and cpk[i]<1.33):
+                outsheet.cell(row=12,column=i+2).fill=fill
+    # Apply style for sheet
+    for i in range(nwords):
+        for j in range(len(cpk)+1):
+            outsheet.cell(row=i+1,column=j+1).font=font
+            outsheet.cell(row=i+1,column=j+1).border=border
+            outsheet.cell(row=i+1,column=j+1).alignment=align
 
-    outdata.save('CPK_Analysis_Result.xls')
+    outdata.save('CPK_Analysis_Result.xlsx')
 
 # ----------------------------------------------------------------------------
 # This is a function to analyse CPK
