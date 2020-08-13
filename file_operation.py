@@ -1,11 +1,30 @@
 import xlrd
 import logging
+import os
+import shutil
 
 # ----------------------------------------------------------------------------
 # Set logging config
 # Logging level includes: logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL
 log_path="RunSteps.log"
 logging.basicConfig(level=logging.DEBUG,format='%(asctime)s - %(levelname)s - %(module)s - %(message)s',filename=log_path)
+
+# ----------------------------------------------------------------------------
+# Set program config
+pro_path=os.getcwd()
+result_path=pro_path+"\Result"
+if os.path.exists(result_path):
+    shutil.rmtree(result_path)
+    os.mkdir(result_path)
+    pass
+else:
+    os.mkdir(result_path)
+
+# ----------------------------------------------------------------------------
+# This is a function to move result file
+def result_file_move(file_name):
+    shutil.move(file_name,result_path)
+    logging.info("File %s have been moved to %s" %(file_name,result_path))
 
 # ----------------------------------------------------------------------------
 # This is a function to read excel file
@@ -40,62 +59,57 @@ def file_read():
     return datasheet, nrows, ncols
 
 # ----------------------------------------------------------------------------
-# This is a function to get 1st col of excel file
-def first_col_row(worksheet,begin_row,begin_col):
-	first_col_value=worksheet.col_values(0,start_rowx=0,end_rowx=None)
-	first_row_value=worksheet.row_values(0,start_colx=0,end_colx=None)
-
-	return first_col_value,first_row_value
-
-# ----------------------------------------------------------------------------
-# This is a function to get each col's data
-def para_data(worksheet,col_position,begin_row):
-
-    # Reading resent parametric
-    res_para=worksheet.cell_value(0,col_position)
-    logging.info("Loading parametric: %s." %res_para)
-    if(res_para==""):
-        logging.error("Cannot find out this parametric name, please check the source file!")
-
-    # Reading resent col values
-    workdata=worksheet.col_values(col_position,start_rowx=begin_row,end_rowx=None)
-    logging.info("Data loaded.")
-
-    # Return resent col data
+# This is a function to get one col data from sheet
+# Function returns single col data, with specific begin row and end row.
+def one_col_data(worksheet,col_num,begin_row,end_row):
+    workdata=worksheet.col_values(col_num,start_rowx=begin_row,end_rowx=end_row)
     return workdata
 
 # ----------------------------------------------------------------------------
-# This is a function to find out value's row
-def value_find_row(worksheet,find_row,begin_col,value_name):
-    for i in range(len(find_row)):
-        if (find_row[i]==value_name):
-            value_row=worksheet.row_values(i,start_colx=begin_col,end_colx=None)
-            logging.info("Found value %s in row %d" %(value_name,i+1))
-            break
-    return i,value_row
+# This is a function to get one row data from sheet
+# Function returns single row data, with specific begin col and end col.
+def one_row_data(worksheet,row_num,begin_col,end_col):
+    workdata=worksheet.row_values(row_num,start_colx=begin_col,end_colx=end_col)
+    return workdata
 
 # ----------------------------------------------------------------------------
-# This is a function to find out value's col
-def value_find_col(worksheet,find_col,begin_row,value_name):
-    for i in range(len(find_col)):
-        if(find_col[i]==value_name):
-            value_col=worksheet.col_values(i,start_rowx=begin_row,end_rowx=None)
-            logging.info("Found value %s in col %d" %(value_name,i+1))
+# This is a function to get value's position from whole sheet by rows
+# Function returns (row,col) of value
+def find_value_by_row(worksheet,nrows,value_name,begin_col,end_col):
+    result_control=0
+    for i in range(nrows):
+        workdata=worksheet.row_values(i,start_colx=begin_col,end_colx=end_col)
+        for j in range(len(workdata)):
+            if (value_name==str(workdata[j])):
+                print("Found '%s' at row %d, col %d" %(value_name,i+1,j+1))
+                logging.info("Found '%s' at row %d, col %d" %(value_name,i+1,j+1))
+                result_control=1
+                break
+        if(result_control==1):
             break
-    return i,value_col
+    if (result_control==0):
+        print("Cannot find out value %s from sheet!Please check file!" %value_name)
+        logging.error("Cannot find out value %s from sheet!" %value_name)
+    else:
+        return i,j
 
 # ----------------------------------------------------------------------------
-# This is a function to choose data range
-def data_range():
-
-    # Need user to input an integer number
-    print('Please input the number beginning of row:')
-    begin_row=int(input())-1
-    print('Please input the number beginning of col:')
-    begin_col=int(input())-1
-    print("Row begins at %d. Col begins at %d" %(begin_row+1,begin_col+1))
-
-    # Record information of data range
-    logging.info("Chosen Range:\nRow begins at %d\nCol begins at %d" %(begin_row+1,begin_col+1))
-
-    return begin_row, begin_col
+# This is a function to get value's position from whole sheet by cols
+# Function returns (row,col) of value
+def find_value_by_col(worksheet,ncols,value_name,begin_row,end_row):
+    result_control=0
+    for i in range(ncols):
+        workdata=worksheet.col_values(i,start_rowx=begin_row,end_rowx=end_row)
+        for j in range(len(workdata)):
+            if (value_name==str(workdata[j])):
+                print("Found '%s' at row %d, col %d" %(value_name,i+1,j+1))
+                logging.info("Found '%s' at row %d, col %d" %(value_name,j+1,i+1))
+                result_control=1
+                break
+        if(result_control==1):
+            break
+    if (result_control==0):
+        print("Cannot find out value %s from sheet!Please check file!" %value_name)
+        logging.error("Cannot find out value %s from sheet!" %value_name)
+    else:
+        return j,i

@@ -8,12 +8,29 @@ from openpyxl.styles import Font,PatternFill,Border,Side,Alignment
 # Parameter definition
 upp_limit_name="Upper Limit"
 low_limit_name="Lower Limit"
+result_file="CPK_Analysis_Result.xlsx"
 
 # ----------------------------------------------------------------------------
 # Set logging config
 # Logging level includes: logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL
 log_path="RunSteps.log"
 logging.basicConfig(level=logging.DEBUG,format='%(asctime)s - %(levelname)s - %(module)s - %(message)s',filename=log_path)
+
+# ----------------------------------------------------------------------------
+# This is a function to choose data range
+def data_range():
+
+    # Need user to input an integer number
+    print('Please input the number beginning of row:')
+    begin_row=int(input())-1
+    print('Please input the number beginning of col:')
+    begin_col=int(input())-1
+    print("Row begins at %d. Col begins at %d" %(begin_row+1,begin_col+1))
+
+    # Record information of data range
+    logging.info("Chosen Range:\nRow begins at %d\nCol begins at %d" %(begin_row+1,begin_col+1))
+
+    return begin_row, begin_col
 
 # ----------------------------------------------------------------------------
 # This is a function to calculate data average & standard deviaion
@@ -124,30 +141,31 @@ def output_cpk_result(para,avg,std,pos3_delta,neg3_delta,data_min,data_max,cpl,c
     npara=len(avg)
     nwords=len(words)
     for i in range(nwords):
-        outsheet.cell(row=i+1,column=1).value=words[i]
+        outsheet.cell(row=i+2,column=2).value=words[i]
     for i in range(npara):
-        outsheet.cell(row=1,column=i+2).value=para[i]
-        outsheet.cell(row=2,column=i+2).value=upp_limit_row[i]
-        outsheet.cell(row=3,column=i+2).value=low_limit_row[i]
-        outsheet.cell(row=4,column=i+2).value=avg[i]
-        outsheet.cell(row=5,column=i+2).value=std[i]
-        outsheet.cell(row=6,column=i+2).value=pos3_delta[i]
-        outsheet.cell(row=7,column=i+2).value=neg3_delta[i]
-        outsheet.cell(row=8,column=i+2).value=data_max[i]
-        outsheet.cell(row=9,column=i+2).value=data_min[i]
-        outsheet.cell(row=10,column=i+2).value=cpl[i]
-        outsheet.cell(row=11,column=i+2).value=cpu[i]
-        outsheet.cell(row=12,column=i+2).value=cpk[i]
+        outsheet.cell(row=2,column=i+3).value=para[i]
+        outsheet.cell(row=3,column=i+3).value=upp_limit_row[i]
+        outsheet.cell(row=4,column=i+3).value=low_limit_row[i]
+        outsheet.cell(row=5,column=i+3).value=avg[i]
+        outsheet.cell(row=6,column=i+3).value=std[i]
+        outsheet.cell(row=7,column=i+3).value=pos3_delta[i]
+        outsheet.cell(row=8,column=i+3).value=neg3_delta[i]
+        outsheet.cell(row=9,column=i+3).value=data_max[i]
+        outsheet.cell(row=10,column=i+3).value=data_min[i]
+        outsheet.cell(row=11,column=i+3).value=cpl[i]
+        outsheet.cell(row=12,column=i+3).value=cpu[i]
+        outsheet.cell(row=13,column=i+3).value=cpk[i]
         if(cpk[i]!="NA" and cpk[i]<1.33):
-                outsheet.cell(row=12,column=i+2).fill=fill
+                outsheet.cell(row=13,column=i+3).fill=fill
     # Apply style for sheet
     for i in range(nwords):
         for j in range(len(cpk)+1):
-            outsheet.cell(row=i+1,column=j+1).font=font
-            outsheet.cell(row=i+1,column=j+1).border=border
-            outsheet.cell(row=i+1,column=j+1).alignment=align
+            outsheet.cell(row=i+2,column=j+2).font=font
+            outsheet.cell(row=i+2,column=j+2).border=border
+            outsheet.cell(row=i+2,column=j+2).alignment=align
 
-    outdata.save('CPK_Analysis_Result.xlsx')
+    outdata.save(result_file)
+    file_operation.result_file_move(result_file)
 
 # ----------------------------------------------------------------------------
 # This is a function to analyse CPK
@@ -163,10 +181,15 @@ def cpk_analysis():
     cpu=()
     cpk=()
     (worksheet,nrows,ncols)=file_operation.file_read()
-    (begin_row,begin_col)=file_operation.data_range()
-    (first_col_value,first_row_value)=file_operation.first_col_row(worksheet,begin_row,begin_col)
-    (upp_row_num,upp_limit_row)=file_operation.value_find_row(worksheet,first_col_value,begin_col,upp_limit_name)
-    (low_row_num,low_limit_row)=file_operation.value_find_row(worksheet,first_col_value,begin_col,low_limit_name)
+    (begin_row,begin_col)=data_range()
+
+    # Get first col & row data from sheet
+    (upp_row_num,upp_col_num)=file_operation.find_value_by_row(worksheet,nrows,upp_limit_name,0,None)
+    (low_row_num,low_col_num)=file_operation.find_value_by_row(worksheet,nrows,low_limit_name,0,None)
+    upp_limit_row=file_operation.one_row_data(worksheet,upp_row_num,begin_col,None)
+    low_limit_row=file_operation.one_row_data(worksheet,low_row_num,begin_col,None)
+
+    # Get parameter data from sheet
     para=worksheet.row_values(0,start_colx=begin_col,end_colx=None)
     logging.info("CPK Analysis Details:\n=========================")
 
@@ -176,7 +199,7 @@ def cpk_analysis():
         if(i<begin_col):
             continue
         else:
-            workdata=file_operation.para_data(worksheet,i,begin_row)
+            workdata=file_operation.one_col_data(worksheet,i,begin_row,None)
             (single_avg,single_std,single_max,single_min,single_cpl,single_cpu,single_cpk)=data_cpk_cal(workdata,upp_limit_row,low_limit_row,i,begin_col)
             # Data are saved as a tuple list in case of no other change
             avg=avg+(single_avg,)
@@ -189,7 +212,7 @@ def cpk_analysis():
             cpu=cpu+(single_cpu,)
             cpk=cpk+(single_cpk,)
 
-    # Print results
+    # Print results to excel file
     print("All data calculate finished!\nOutput results as excel file...")
     output_cpk_result(para,avg,std,pos3_delta,neg3_delta,data_min,data_max,cpl,cpu,cpk,low_limit_row,upp_limit_row)
     print("Excel output finished!\nProgram finished!\n")
