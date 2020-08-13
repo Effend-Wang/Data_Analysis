@@ -1,6 +1,6 @@
 # Data Analysis Program
 # Author: Effend Wang
-# Version: v0.4
+# Version: v0.5
 
 # Import local python lib
 import sys
@@ -16,8 +16,8 @@ import mode_choose
 # Here are messages of program
 Program_Name="Data Analysis Program"
 Author="Effend Wang"
-Version="v0.4"
-Last_Edit="2019/08/23 Friday"
+Version="v0.5"
+Last_Edit="2019/08/29 Thursday"
 Use_msg="This software is still under testing. Not final version."
 Attention_msg="Attention! This software can only run in Vista, Win7, Win10 system!"
 Help_msg="If you need help, please see ReadMe."
