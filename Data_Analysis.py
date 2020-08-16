@@ -1,51 +1,76 @@
 # Data Analysis Program
 # Author: Effend Wang
-# Version: v0.6
+# Version: v0.7
 
-# Import local python lib
+# Import local python dylib
 import sys
-import time
 import datetime
 import os
 import shutil
 
-# Import program lib
+# Import program's python file
 import mode_choose
-import log
+import log.log as log
+import path_config
 
 # ----------------------------------------------------------------------------
-# Here are messages of program
-Program_Name="Data Analysis Program"
-Author="Effend Wang"
-Version="v0.6"
-Last_Edit="2019/12/15 Sunday"
-Use_msg="This software is still under testing. Not final version."
-Attention_msg="Attention! This software can only run in Vista, Win7, Win10 system!"
-Help_msg="If you need help, please see ReadMe."
+# Setting messages of program
+program_name="Data Analysis"
+author="Effend Wang"
+version="v0.7"
+last_edit="2020/08/16"
+use_msg="Fixed output bug of test coverage and CPK. Added independent result folder."
+attention_msg="Attention! This software can only run in Vista, Win7, Win10 system!"
+help_msg="If you need help, please see ReadMe or contact with developer effend_wang@outlook.com"
 
 # ----------------------------------------------------------------------------
-# Program running steps
-print("Program Begin\n%s\nAuthor: %s\nLast Edit: %s\n\n%s\n%s\n%s\n\nStartTime: %s" %(Program_Name,Author,Last_Edit,Use_msg,Attention_msg,Help_msg,datetime.datetime.now()))
-log.write("info","Main Func - Program Start.")
+# Get the running time of program
+# Time style: YearMonthDay Hour-Minute-Second
+program_start_time=datetime.datetime.now().strftime("%Y%m%d %H-%M-%S")
 
 # ----------------------------------------------------------------------------
-# Set program config
-pro_path=os.getcwd()
-result_path=pro_path+"\Result"
-if os.path.exists(result_path):
-    log.write("info","Main Func - \"Result\" dir is exist. Rebuild result dir.")
-    shutil.rmtree(result_path)
-    os.mkdir(result_path)
-    pass
-else:
-    log.write("info","Main Func - \"Result\" dir is not exist. Build result dir.")
-    os.mkdir(result_path)
+# Set path config
+# Result path style: (program path)\Result (program start time)\
+# Log path style: (result path)\log
 
-# Program Begin
-try:
-    mode_choose.mode()
-    os.system('pause')
-except Exception as e:
-    log.write("critical","A Program ERROR Occured: %s\n" %e)
-    print("ERROR: A Program ERROR Occured, check the log file to check the details!")
-    os.system('pause')
+# Create the result path
+path_config.result_path(program_start_time)
+# Create the log path
+path_config.log_path()
+# Get result path
+result_path=path_config.get_result_path()
+# Get log path and setting log style
+log_path=path_config.get_log_path()
+log.log_style()
+
+# ----------------------------------------------------------------------------
+# Output program messages
+
+# Output messages in log
+log.write("info","\n%s %s" %(program_name,version))
+log.write("info","%s" %last_edit)
+log.write("info","Author: %s" %author)
+log.write("info","Program Start!\n")
+
+# Output messages in terminal
+print('*'*50)
+print("%s %s\nAuthor: %s\n%s\n%s\n" %(program_name,version,author,attention_msg,help_msg))
+print("Program Start Time: %s" %program_start_time)
+print("Set Result Path: %s" %result_path)
+print("Set Log Path: %s\n" %log_path)
+print('*'*50+"\n")
+
+# ----------------------------------------------------------------------------
+# Program start
+#try:
+	# Choose analyse mode
+mode_choose.mode()
+log.write("info","Program Running Finished! Program End!\n\n")
+print("Program running finished! Please check the result in:\n%s" %result_path)
+os.system('pause')
+#except Exception as e:
+    # Record and output exception message
+    #log.write("warning","Program Running Fail!")
+    #log.write("critical","A Program ERROR Occured: %s\n\n" %e)
+    #print("ERROR: A Program ERROR Occured!\n%s" %e)
+    #os.system('pause')

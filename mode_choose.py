@@ -1,10 +1,10 @@
-import cpk
-import test_coverage
+import cpk_analysis.cpk as cpk
+import test_item_analysis.test_coverage as test_coverage
 
 # ----------------------------------------------------------------------------
 # This is a function to choose analysis mode & run
 def mode():
-    print("Please choose your work mode:\n\tCPK Analysis (a)\n\tTest Coverage Analysis (b)\nYour choice is:")
+    print("Choose your work mode:\n\tCPK Analysis (a)\n\tTest Coverage Analysis (b)\nYour choice is:")
     mode_value=input()
     while(1):
         if(mode_value=="a"):

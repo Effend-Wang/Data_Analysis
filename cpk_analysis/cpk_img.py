@@ -9,7 +9,8 @@ import numpy as np
 
 # Import program lib
 import file_operation
-import log
+import log.log as log
+import path_config
 
 # ----------------------------------------------------------------------------
 # This is a function to check data
@@ -55,7 +56,7 @@ def cpkimg_draw(para_name,data,low_limit,upp_limit,avg,std):
     # Initialize image style
     bins=x_axis
     alpha=0.5
-    facecolor='deepskyblue'
+    facecolor='gray'
     edgecolor="black"
     #weights=np.ones_like(x_axis)/(len(x_axis))
     
@@ -74,7 +75,7 @@ def cpkimg_draw(para_name,data,low_limit,upp_limit,avg,std):
         pyplot.axvline(x=upp_limit,ls="-",c="red",label="Limit")
     elif(low_limit!="NA"):
         pyplot.axvline(x=low_limit,ls="-",c="red",label="Limit")
-    pyplot.axvline(x=avg,ls="-",c="green",label="Average")
+    pyplot.axvline(x=avg,ls="-",c="skyblue",label="Average")
     
     # Draw normal distribution under ideal conditions
     mu=avg
@@ -86,8 +87,8 @@ def cpkimg_draw(para_name,data,low_limit,upp_limit,avg,std):
 
     # Draw +3sigma & -3sigma limits
     if(sigma!=0):
-        pyplot.axvline(x=mu-3*sigma,ls="--",c="gray",label=r'$\pm$3$\sigma$')
-        pyplot.axvline(x=mu+3*sigma,ls="--",c="gray")
+        pyplot.axvline(x=mu-3*sigma,ls="--",c="skyblue",label=r'$\pm$3$\sigma$')
+        pyplot.axvline(x=mu+3*sigma,ls="--",c="skyblue")
 
     # Show image
     pyplot.legend()
@@ -95,7 +96,8 @@ def cpkimg_draw(para_name,data,low_limit,upp_limit,avg,std):
     # Save img
     img_file=title_name+".png"
     pyplot.savefig(img_file)
-    file_operation.result_file_move(img_file)
+    result_path=path_config.get_result_path()
+    file_operation.result_file_move(img_file,result_path)
 
     # Close pyplot after image saved
     pyplot.close()

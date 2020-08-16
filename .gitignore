@@ -1,0 +1,15 @@
+# This is git ignore file
+
+# Ignore python chace files
+__pycache__
+
+# Ignore result files created by program
+Result*
+
+# Ignore python pyinstaller files
+build
+dist
+*.spec
+
+# Ignore zip file
+*.zip

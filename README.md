@@ -1,20 +1,18 @@
 # Data_Analysis
-Data Analysis Program v0.6
+Data Analysis Program v0.7
 作者: Effend Wang
-最新版本信息: v0.6
+最新版本信息: v0.7
 最后编辑时间: 2019/12/15 Sunday
 
-v0.6更新内容：
-1、修正Log中存在的错误描述，改进了Log的输出信息，在CPK Analysis的Log中添加当前分析参数名及输出源；
-2、优化Log输出模块以提高程序运行效率；
-3、修正Test Coverage Analysis存在的输出错误问题；
-4、新增CPK图像的输出，将在Result文件夹中输出数据的柱状分布图。并加入了输出图像的可选项，可输出所有图像或仅输出CPK<1.33的图像。
+v0.7更新内容:
+1、以程序开启时间作为文件夹名保存结果，其中保存有：程序运行产生的Log日志、分析结果；
+2、修复test coverage中Limit输出错误的问题；
+3、修复CPK表格中+3σ、-3σ输出错误的问题；
 
 使用说明：
-1、该程序目前仅用于测试，不代表最终版本，后续功能根据情况逐步添加。
-2、该程序需要运行在Vista、Win7及以上系统，无法在WinXP上运行。
-3、在本版本中能使用CPK Analysis、Test Coverage Analysis功能。
-4、若在运行程序时有疑问或有希望添加的功能，可联系Effend Wang。
+1、该程序需要运行在Vista、Win7及以上系统，无法在WinXP上运行。
+2、在本版本中能使用CPK Analysis、Test Coverage Analysis功能。
+3、若在运行程序时有疑问或有希望添加的功能，可联系Effend Wang。
 
 使用方法：
 1、准备好预先处理过了的.xlsx或.xls文件，文件形式可参考example文件夹下的示例文件。

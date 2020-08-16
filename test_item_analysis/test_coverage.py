@@ -7,7 +7,8 @@ from openpyxl.styles import Font,PatternFill,Border,Side,Alignment
 
 # Import program lib
 import file_operation
-import log
+import log.log as log
+import path_config
 
 # ----------------------------------------------------------------------------
 # Parameter definition
@@ -164,7 +165,8 @@ def test_cov_output(same_para,same_limit,diff_para,diff_limit_old,diff_limit_new
 
     # Write file
     outdata.save(result_file)
-    file_operation.result_file_move(result_file)
+    result_path=path_config.get_result_path()
+    file_operation.result_file_move(result_file,result_path)
 
 # ----------------------------------------------------------------------------
 # This is main function to run test coverage analysis
