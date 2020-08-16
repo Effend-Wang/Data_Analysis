@@ -1,20 +1,19 @@
-import file_operation
+# ----------------------------------------------------------------------------
+# Import local python lib
 import math
-import logging
 from openpyxl import Workbook
 from openpyxl.styles import Font,PatternFill,Border,Side,Alignment
+
+# Import program lib
+import file_operation
+import cpk_img
+import log
 
 # ----------------------------------------------------------------------------
 # Parameter definition
 upp_limit_name="Upper Limit"
 low_limit_name="Lower Limit"
 result_file="CPK_Analysis_Result.xlsx"
-
-# ----------------------------------------------------------------------------
-# Set logging config
-# Logging level includes: logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL
-log_path="RunSteps.log"
-logging.basicConfig(level=logging.DEBUG,format='%(asctime)s - %(levelname)s - %(module)s - %(message)s',filename=log_path)
 
 # ----------------------------------------------------------------------------
 # This is a function to choose data range
@@ -28,15 +27,13 @@ def data_range():
     print("Row begins at %d. Col begins at %d" %(begin_row+1,begin_col+1))
 
     # Record information of data range
-    logging.info("Chosen Range:\nRow begins at %d\nCol begins at %d" %(begin_row+1,begin_col+1))
+    log.write("info","CPK - Chosen Range:\nRow begins at %d\nCol begins at %d" %(begin_row+1,begin_col+1))
 
     return begin_row, begin_col
 
 # ----------------------------------------------------------------------------
 # This is a function to calculate data average & standard deviaion
-def data_cpk_cal(workdata,upp_limit_row,low_limit_row,limit_col_num,begin_col):
-
-    workdata=cpk_data_check(workdata)
+def data_cpk_cal(para_name,workdata,upp_limit_row,low_limit_row,limit_col_num,begin_col,cpk_cb):
 
     # Calculating max & min of data
     single_max=max(workdata)
@@ -56,25 +53,26 @@ def data_cpk_cal(workdata,upp_limit_row,low_limit_row,limit_col_num,begin_col):
     upp_limit=upp_limit_row[limit_col_num-begin_col]
     low_limit=low_limit_row[limit_col_num-begin_col]
     if(upp_limit=="NA" and low_limit=="NA"):
-        logging.info("The limit is [NA,NA]")
+        log.write("info","CPK - The limit is [NA,NA]")
     elif(upp_limit=="NA"):
-        logging.info("The limit is [%s,NA]" %low_limit)
+        log.write("info","CPK - The limit is [%s,NA]" %low_limit)
     elif(low_limit=="NA"):
-        logging.info("The limit is [NA,%s]" %upp_limit)
+        log.write("info","CPK - The limit is [NA,%s]" %upp_limit)
     else:
-        logging.info("The limit is [%s,%s]" %(low_limit,upp_limit))
+        log.write("info","CPK - The limit is [%s,%s]" %(low_limit,upp_limit))
+
     if(single_std==0 or (upp_limit=="NA" and low_limit=="NA")):
-    	logging.warning("This parametric std is 0 or limit is NA.")
+    	log.write("warning","CPK - This parametric std is 0 or limit is NA.")
     	single_cpl="NA"
     	single_cpu="NA"
     	single_cpk="NA"
     elif(upp_limit=="NA"):
-    	logging.warning("This parametric has no upper limit.")
+    	log.write("warning","CPK - This parametric has no upper limit.")
     	single_cpl=(single_avg-low_limit)/3/single_std
     	single_cpu="NA"
     	single_cpk=single_cpl
     elif(low_limit=="NA"):
-    	logging.warning("This parametric has no lower limit.")
+    	log.write("warning","CPK - This parametric has no lower limit.")
     	single_cpl="NA"
     	single_cpu=(upp_limit-single_avg)/3/single_std
     	single_cpk=single_cpu
@@ -84,27 +82,39 @@ def data_cpk_cal(workdata,upp_limit_row,low_limit_row,limit_col_num,begin_col):
     	single_cpk=min(single_cpl,single_cpu)
 
     # Output calculating results
-    logging.info("The STD of this parametric is %f",single_std)
-    logging.info("The AVG of this parametric is %f",single_avg)
+    log.write("info","CPK - The STD of this parametric is %f" %single_std)
+    log.write("info","CPK - The AVG of this parametric is %f" %single_avg)
     if(single_cpk!="NA"):
-        logging.info("The CPK of this parametric is %f",single_cpk)
+        log.write("info","CPK - The CPK of this parametric is %f" %single_cpk)
     else:
-        logging.info("The CPK of this parametric is NA")
+        log.write("info","CPK - The CPK of this parametric is NA")
 
-    # Check values
-    check_value(single_cpk)
+    # Check CPK value
+    if(single_cpk=="NA"):
+        check_cb=(cpk_cb==1)
+        log.write("warning","CPK - Parametric has no CPK value.\n=========================")
+    elif(single_cpk<1.33):
+        check_cb=True
+        log.write("warning","CPK - Parametric CPK is not OK.\n=========================")
+    else:
+        check_cb=(cpk_cb==1)
+        log.write("info","CPK - Parametric CPK is OK.\n=========================")
+    
+    # Draw images of CPK data
+    if(check_cb==True):
+        cpk_img.cpkimg_draw(para_name,workdata,low_limit,upp_limit,single_avg,single_std)
 
     return single_avg,single_std,single_max,single_min,single_cpl,single_cpu,single_cpk
 
 # ----------------------------------------------------------------------------
 # This is a function to check CPK values
-def check_value(cpk_value):
-    if(cpk_value=="NA"):
-        logging.error("Parametric has no CPK value.\n=========================")
-    elif(cpk_value<1.33):
-        logging.error("Parametric CPK is not OK.\n=========================")
-    else:
-        logging.info("Parametric CPK is OK.\n=========================")
+#def check_value(cpk_value):
+#    if(cpk_value=="NA"):
+#        log.write("error","CPK - Parametric has no CPK value.\n=========================")
+#    elif(cpk_value<1.33):
+#        log.write("warning","CPK - Parametric CPK is not OK.\n=========================")
+#    else:
+#        log.write("info","CPK - Parametric CPK is OK.\n=========================")
 
 # ----------------------------------------------------------------------------
 # This is a function to check data, delete blank data
@@ -156,7 +166,7 @@ def output_cpk_result(para,avg,std,pos3_delta,neg3_delta,data_min,data_max,cpl,c
         outsheet.cell(row=12,column=i+3).value=cpu[i]
         outsheet.cell(row=13,column=i+3).value=cpk[i]
         if(cpk[i]!="NA" and cpk[i]<1.33):
-                outsheet.cell(row=13,column=i+3).fill=fill
+            outsheet.cell(row=13,column=i+3).fill=fill
     # Apply style for sheet
     for i in range(nwords):
         for j in range(len(cpk)+1):
@@ -164,6 +174,8 @@ def output_cpk_result(para,avg,std,pos3_delta,neg3_delta,data_min,data_max,cpl,c
             outsheet.cell(row=i+2,column=j+2).border=border
             outsheet.cell(row=i+2,column=j+2).alignment=align
 
+    print("Output cpk excel file.")
+    log.write("info","CPK - Output CPK Excel File.")
     outdata.save(result_file)
     file_operation.result_file_move(result_file)
 
@@ -191,29 +203,42 @@ def cpk_analysis():
 
     # Get parameter data from sheet
     para=worksheet.row_values(0,start_colx=begin_col,end_colx=None)
-    logging.info("CPK Analysis Details:\n=========================")
+    log.write("info","CPK - CPK Analysis Details:\n=========================")
 
+    # Get cpk image mode
+    cpk_cb=0
+    while(cpk_cb!=1 and cpk_cb!=2):
+        print("Choose the way to output CPK distribution image:\n\t1. Output All CPK Distribution\n\t2. Output CPK<1.33 Distribution")
+        cpk_cb=int(input())
+    
     # Calculating by col
     print("Start calculating, please wait...")
-    for i in range(ncols):
+    for i in range(ncols): 
         if(i<begin_col):
             continue
         else:
+            para_name=file_operation.one_col_data(worksheet,i,0,1)
             workdata=file_operation.one_col_data(worksheet,i,begin_row,None)
-            (single_avg,single_std,single_max,single_min,single_cpl,single_cpu,single_cpk)=data_cpk_cal(workdata,upp_limit_row,low_limit_row,i,begin_col)
-            # Data are saved as a tuple list in case of no other change
-            avg=avg+(single_avg,)
-            std=std+(single_std,)
-            pos3_delta=pos3_delta+(single_avg+single_std*3,)
-            neg3_delta=pos3_delta+(single_avg-single_std*3,)
-            data_min=data_min+(single_min,)
-            data_max=data_max+(single_max,)
-            cpl=cpl+(single_cpl,)
-            cpu=cpu+(single_cpu,)
-            cpk=cpk+(single_cpk,)
+            log.write("info","CPK - Analyse parameter: %s" %para_name)
+            workdata=cpk_data_check(workdata)
+            if(workdata!=''):
+                (single_avg,single_std,single_max,single_min,single_cpl,single_cpu,single_cpk)=data_cpk_cal(para_name,workdata,upp_limit_row,low_limit_row,i,begin_col,cpk_cb)
+                # Result data are saved as a tuple list in case of no other change
+                avg=avg+(single_avg,)
+                std=std+(single_std,)
+                pos3_delta=pos3_delta+(single_avg+single_std*3,)
+                neg3_delta=pos3_delta+(single_avg-single_std*3,)
+                data_min=data_min+(single_min,)
+                data_max=data_max+(single_max,)
+                cpl=cpl+(single_cpl,)
+                cpu=cpu+(single_cpu,)
+                cpk=cpk+(single_cpk,)
+            else:
+                log.write("error","CPK - This parameter has no test value!")
+                continue
 
     # Print results to excel file
     print("All data calculate finished!\nOutput results as excel file...")
     output_cpk_result(para,avg,std,pos3_delta,neg3_delta,data_min,data_max,cpl,cpu,cpk,low_limit_row,upp_limit_row)
     print("Excel output finished!\nProgram finished!\n")
-    logging.info("All CPK analysis steps finished!\nProgram Finished!\n\n")
+    log.write("info","CPK - All CPK analysis steps finished!\nProgram Finished!\n\n")

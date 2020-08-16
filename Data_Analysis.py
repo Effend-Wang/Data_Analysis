@@ -1,39 +1,51 @@
 # Data Analysis Program
 # Author: Effend Wang
-# Version: v0.5
+# Version: v0.6
 
 # Import local python lib
 import sys
-import logging
 import time
 import datetime
 import os
+import shutil
 
-# Import program function
+# Import program lib
 import mode_choose
+import log
 
 # ----------------------------------------------------------------------------
 # Here are messages of program
 Program_Name="Data Analysis Program"
 Author="Effend Wang"
-Version="v0.5"
-Last_Edit="2019/08/29 Thursday"
+Version="v0.6"
+Last_Edit="2019/12/15 Sunday"
 Use_msg="This software is still under testing. Not final version."
 Attention_msg="Attention! This software can only run in Vista, Win7, Win10 system!"
 Help_msg="If you need help, please see ReadMe."
 
 # ----------------------------------------------------------------------------
-# Set logging config
-# Logging level includes: logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL
-log_path="RunSteps.log"
-logging.basicConfig(level=logging.DEBUG,format='%(asctime)s - %(levelname)s - %(module)s - %(message)s',filename=log_path)
-
-# ----------------------------------------------------------------------------
 # Program running steps
 print("Program Begin\n%s\nAuthor: %s\nLast Edit: %s\n\n%s\n%s\n%s\n\nStartTime: %s" %(Program_Name,Author,Last_Edit,Use_msg,Attention_msg,Help_msg,datetime.datetime.now()))
-logging.info("Programe Start.")
+log.write("info","Main Func - Program Start.")
+
+# ----------------------------------------------------------------------------
+# Set program config
+pro_path=os.getcwd()
+result_path=pro_path+"\Result"
+if os.path.exists(result_path):
+    log.write("info","Main Func - \"Result\" dir is exist. Rebuild result dir.")
+    shutil.rmtree(result_path)
+    os.mkdir(result_path)
+    pass
+else:
+    log.write("info","Main Func - \"Result\" dir is not exist. Build result dir.")
+    os.mkdir(result_path)
+
+# Program Begin
 try:
     mode_choose.mode()
     os.system('pause')
 except Exception as e:
-    logging.critical("A Program ERROR Occured: %s\n" %e)
+    log.write("critical","A Program ERROR Occured: %s\n" %e)
+    print("ERROR: A Program ERROR Occured, check the log file to check the details!")
+    os.system('pause')

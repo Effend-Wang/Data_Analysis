@@ -1,5 +1,6 @@
 import cpk
 import test_coverage
+
 # ----------------------------------------------------------------------------
 # This is a function to choose analysis mode & run
 def mode():
@@ -13,5 +14,5 @@ def mode():
             test_coverage.test_coverage_analysis()
             break
         else:
-            print("No satisfied mode in this program.\nPlease re-choose:")
+            print("No satisfied mode in this program.\nPlease choose again:")
             mode_value=input()

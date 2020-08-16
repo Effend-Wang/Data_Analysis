@@ -1,7 +1,13 @@
-import file_operation
-import logging
+# ----------------------------------------------------------------------------
+# This function is used to analyse test coverage
+
+# Import local python lib
 from openpyxl import Workbook
 from openpyxl.styles import Font,PatternFill,Border,Side,Alignment
+
+# Import program lib
+import file_operation
+import log
 
 # ----------------------------------------------------------------------------
 # Parameter definition
@@ -9,12 +15,6 @@ upp_limit_name="Higher Limit"
 low_limit_name="Lower Limit"
 key_name="Key"
 result_file="Test_Coverage_Result.xlsx"
-
-# ----------------------------------------------------------------------------
-# Set logging config
-# Logging level includes: logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL
-log_path="RunSteps.log"
-logging.basicConfig(level=logging.DEBUG,format='%(asctime)s - %(levelname)s - %(module)s - %(message)s',filename=log_path)
 
 # ----------------------------------------------------------------------------
 # This is a function to combine limits to one string
@@ -42,12 +42,11 @@ def apply_style(outsheet,row_begin,col_begin,row_end,col_end):
     # Size: 12
     # Border: Thin
     # Alignment: Center
-    # Pattern Fill: Red background color when CPK<1.33
     font=Font('Times New Roman',size=12)
     border=Border(left=Side(border_style='thin',color='000000'),right=Side(border_style='thin',color='000000'),top=Side(border_style='thin',color='000000'),bottom=Side(border_style='thin',color='000000'))
     align=Alignment(horizontal='center',vertical='center')
 
-        # Apply style for sheet
+    # Apply style for sheet
     for i in range((row_end-row_begin+1)):
         for j in range((col_end-col_begin+1)):
             outsheet.cell(row=row_begin+i,column=col_begin+j).font=font
@@ -68,7 +67,7 @@ def test_cov_cal(old_para,old_limit,new_para,new_limit):
     delete_limit=()
 
     # Check new parameter
-    logging.info("Start checking new paramter:")
+    log.write("info","Test Coverage - Start checking new paramter:")
     for i in range(len(new_para)):
         para_find_status=0
         limit_find_status=0
@@ -79,24 +78,24 @@ def test_cov_cal(old_para,old_limit,new_para,new_limit):
                     limit_find_status=1
                     continue
         if (para_find_status==0 and limit_find_status==0):
-            logging.info("Parameter %s is a new one" %new_para[i])
+            log.write("info","Test Coverage - Parameter %s is a new one" %new_para[i])
             update_para=update_para+(new_para[i],)
             update_limit=update_limit+(new_limit[i],)
         elif (para_find_status==1 and limit_find_status==0):
-            logging.info("New limit %s for %s" %(new_limit[i],new_para[i]))
+            log.write("info","Test Coverage - New limit %s for %s" %(new_limit[i],new_para[i]))
             diff_para=diff_para+(new_para[i],)
-            diff_limit_old=diff_limit_old+(old_limit[j],)
+            diff_limit_old=diff_limit_old+(old_limit[i],)
             diff_limit_new=diff_limit_new+(new_limit[i],)
         elif (para_find_status==1 and limit_find_status==1):
-            logging.info("Same parameter %s & limit %s" %(new_para[i],new_limit[i]))
+            log.write("info","Test Coverage - Same parameter %s & limit %s" %(new_para[i],new_limit[i]))
             same_para=same_para+(new_para[i],)
             same_limit=same_limit+(new_limit[i],)
         else:
             continue
-    logging.info("New parameter check finished.\n=========================")
+    log.write("info","Test Coverage - New parameter check finished.\n=========================")
     
     # Check old parameter
-    logging.info("Start checking old parameter:")
+    log.write("info","Test Coverage - Start checking old parameter:")
     for i in range(len(old_para)):
         para_find_status=0
         for j in range(len(new_para)):
@@ -104,10 +103,10 @@ def test_cov_cal(old_para,old_limit,new_para,new_limit):
                 para_find_status=1
                 continue
         if (para_find_status==0):
-            logging.info("Parameter %s is not exist in new file" %old_para[i])
+            log.write("info","Test Coverage - Parameter %s is not exist in new file." %old_para[i])
             delete_para=delete_para+(old_para[i],)
             delete_limit=delete_limit+(old_limit[i],)
-    logging.info("Old parameter check finished.\n=========================")
+    log.write("info","Test Coverage - Old parameter check finished.\n=========================")
     
     # Output results
     print("All data analysis finished!\nOutput results as excel file...")
@@ -125,7 +124,7 @@ def test_cov_output(same_para,same_limit,diff_para,diff_limit_old,diff_limit_new
     col_begin=2
     row_begin=2
     if (same_para!=()):
-        logging.info("Write same parameter in file")
+        log.write("info","Test Coverage - Write same parameter in file")
         outsheet.cell(row=row_begin,column=col_begin).value="Same Parameter"
         outsheet.cell(row=row_begin,column=col_begin+1).value="Limit"
         for i in range(len(same_para)):
@@ -134,8 +133,8 @@ def test_cov_output(same_para,same_limit,diff_para,diff_limit_old,diff_limit_new
         apply_style(outsheet,row_begin,col_begin,len(same_para)+row_begin,col_begin+1)
         col_begin=col_begin+3
     if (diff_para!=()):
-        logging.info("Write different parameter in file")
-        outsheet.cell(row=row_begin,column=col_begin).value="Update Parameter"
+        log.write("info","Test Coverage - Write changed parameter in file")
+        outsheet.cell(row=row_begin,column=col_begin).value="Changed Parameter"
         outsheet.cell(row=row_begin,column=col_begin+1).value="Old Limit"
         outsheet.cell(row=row_begin,column=col_begin+2).value="New Limit"
         for i in range(len(diff_para)):
@@ -145,8 +144,8 @@ def test_cov_output(same_para,same_limit,diff_para,diff_limit_old,diff_limit_new
         apply_style(outsheet,row_begin,col_begin,len(diff_para)+row_begin,col_begin+2)
         col_begin=col_begin+4
     if (new_para!=()):
-        logging.info("Write new parameter in file")
-        outsheet.cell(row=row_begin,column=col_begin).value="New Parameter"
+        log.write("info","Test Coverage - Write added parameter in file")
+        outsheet.cell(row=row_begin,column=col_begin).value="Added Parameter"
         outsheet.cell(row=row_begin,column=col_begin+1).value="Limit"
         for i in range(len(new_para)):
             outsheet.cell(row=i+row_begin+1,column=col_begin).value=new_para[i]
@@ -154,7 +153,7 @@ def test_cov_output(same_para,same_limit,diff_para,diff_limit_old,diff_limit_new
         apply_style(outsheet,row_begin,col_begin,len(new_para)+row_begin,col_begin+1)
         col_begin=col_begin+3
     if (delete_para!=()):
-        logging.info("Write deleted parameter in file")
+        log.write("info","Test Coverage - Write deleted parameter in file")
         outsheet.cell(row=row_begin,column=col_begin).value="Deleted Parameter"
         outsheet.cell(row=row_begin,column=col_begin+1).value="Limit"
         for i in range(len(delete_para)):
@@ -168,20 +167,17 @@ def test_cov_output(same_para,same_limit,diff_para,diff_limit_old,diff_limit_new
     file_operation.result_file_move(result_file)
 
 # ----------------------------------------------------------------------------
-# This is a function to run test coverage analysis
+# This is main function to run test coverage analysis
 def test_coverage_analysis():
 
     # Read old & new test parameter file
     print("Test Coverage Analysis:\n1. Input Old Test Parameter File:")
-    logging.info("Read old test file:")
+    log.write("info","Test Coverage - Read old test file:")
     (oldsheet,old_nrows,old_ncols)=file_operation.file_read()
 
-    print("2. Input New Test Parameter File:")
-    logging.info("Read new test file:")
+    print("\n2. Input New Test Parameter File:")
+    log.write("info","Test Coverage - Read new test file:")
     (newsheet,new_nrows,new_ncols)=file_operation.file_read()
-
-    print("All File Loaded.")
-    logging.info("All file loaded")
 
     # Find parameter begin position in sheet
     (old_para_row,old_para_col)=file_operation.find_value_by_col(oldsheet,old_ncols,key_name,0,None)
@@ -195,26 +191,26 @@ def test_coverage_analysis():
 
     # Get parameter & limit data
     old_para_data=file_operation.one_col_data(oldsheet,old_para_col,old_para_row+1,None)
-    logging.info("Old file has %s parameters" %(len(old_para_data)))
+    log.write("info","Test Coverage - Old file has %s parameters" %(len(old_para_data)))
     old_upp_data=file_operation.one_col_data(oldsheet,old_upp_col,old_upp_row+1,old_upp_row+len(old_para_data)+1)
     old_low_data=file_operation.one_col_data(oldsheet,old_low_col,old_low_row+1,old_low_row+len(old_para_data)+1)
     print("Old file data loaded.")
-    logging.info("Old file data loaded")
+    log.write("info","Test Coverage - Old file data loaded")
     new_para_data=file_operation.one_col_data(newsheet,new_para_col,new_para_row+1,None)
-    logging.info("Old file has %s parameters" %(len(new_para_data)))
+    log.write("info","Test Coverage - Old file has %s parameters" %(len(new_para_data)))
     new_upp_data=file_operation.one_col_data(newsheet,new_upp_col,new_upp_row+1,new_upp_row+len(new_para_data)+1)
     new_low_data=file_operation.one_col_data(newsheet,new_low_col,new_low_row+1,new_low_row+len(new_para_data)+1)
     print("New file data loaded.")
-    logging.info("New file data loaded")
+    log.write("info","Test Coverage - New file data loaded")
 
     # Combine limits
     old_limit=combine_limit(old_para_data,old_low_data,old_upp_data)
     new_limit=combine_limit(new_para_data,new_low_data,new_upp_data)
-    logging.info("Limits combined")
+    log.write("info","Test Coverage - Limits combined.")
 
     # Test Coverage Calculating
-    print("Start analysis test coverage, please wait...")
-    logging.info("Start analysis test coverage\n=========================")
+    print("Start analyse test coverage, please wait...")
+    log.write("info","Test Coverage - Start analyse test coverage\n=========================")
     test_cov_cal(old_para_data,old_limit,new_para_data,new_limit)
-    print("Excel output finished!\nProgram finished!\n")
-    logging.info("All test coverage analysis steps finished!\nProgram Finished!\n\n")
+    print("Excel file output finished!\nProgram finished!\n")
+    log.write("info","Test Coverage - All test coverage analysis steps finished!\nProgram Finished!\n\n")

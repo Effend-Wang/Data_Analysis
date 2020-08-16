@@ -1,35 +1,26 @@
+# ----------------------------------------------------------------------------
 import xlrd
-import logging
 import os
 import shutil
 
-# ----------------------------------------------------------------------------
-# Set logging config
-# Logging level includes: logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL
-log_path="RunSteps.log"
-logging.basicConfig(level=logging.DEBUG,format='%(asctime)s - %(levelname)s - %(module)s - %(message)s',filename=log_path)
+# Import program lib
+import log
 
 # ----------------------------------------------------------------------------
-# Set program config
+# Define file path
 pro_path=os.getcwd()
 result_path=pro_path+"\Result"
-if os.path.exists(result_path):
-    shutil.rmtree(result_path)
-    os.mkdir(result_path)
-    pass
-else:
-    os.mkdir(result_path)
 
 # ----------------------------------------------------------------------------
 # This is a function to move result file
 def result_file_move(file_name):
     shutil.move(file_name,result_path)
-    logging.info("File %s have been moved to %s" %(file_name,result_path))
+    log.write("info","File Operate - File %s have been moved to %s" %(file_name,result_path))
 
 # ----------------------------------------------------------------------------
 # This is a function to read excel file
 def file_read():
-
+    
     # Read file to data. Get sheet names and output
     print("Please input the source of file:")
     data_source=input()
@@ -54,9 +45,9 @@ def file_read():
     print("Sheet %s has %d cols" %(chosen_sheet,ncols))
 
     # Record information of data file
-    logging.info("Data File Info:\nFile: %s\nChosen Sheet: %s" %(data_source,chosen_sheet))
+    log.write("info","File Operate - Data File Info:\nFile: %s\nChosen Sheet: %s" %(data_source,chosen_sheet))
 
-    return datasheet, nrows, ncols
+    return datasheet,nrows,ncols
 
 # ----------------------------------------------------------------------------
 # This is a function to get one col data from sheet
@@ -82,14 +73,14 @@ def find_value_by_row(worksheet,nrows,value_name,begin_col,end_col):
         for j in range(len(workdata)):
             if (value_name==str(workdata[j])):
                 print("Found '%s' at row %d, col %d" %(value_name,i+1,j+1))
-                logging.info("Found '%s' at row %d, col %d" %(value_name,i+1,j+1))
+                log.write("info","File Operate - Found '%s' at row %d, col %d" %(value_name,i+1,j+1))
                 result_control=1
                 break
         if(result_control==1):
             break
     if (result_control==0):
         print("Cannot find out value %s from sheet!Please check file!" %value_name)
-        logging.error("Cannot find out value %s from sheet!" %value_name)
+        log.write("error","File Operate - Cannot find out value %s from sheet!" %value_name)
     else:
         return i,j
 
@@ -103,13 +94,13 @@ def find_value_by_col(worksheet,ncols,value_name,begin_row,end_row):
         for j in range(len(workdata)):
             if (value_name==str(workdata[j])):
                 print("Found '%s' at row %d, col %d" %(value_name,i+1,j+1))
-                logging.info("Found '%s' at row %d, col %d" %(value_name,j+1,i+1))
+                log.write("info","File Operate - Found '%s' at row %d, col %d" %(value_name,j+1,i+1))
                 result_control=1
                 break
         if(result_control==1):
             break
     if (result_control==0):
         print("Cannot find out value %s from sheet!Please check file!" %value_name)
-        logging.error("Cannot find out value %s from sheet!" %value_name)
+        log.write("error","File Operate - Cannot find out value %s from sheet!" %value_name)
     else:
         return j,i
